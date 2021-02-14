@@ -1,0 +1,26 @@
+body {
+  background: $body-background-color;
+  color: $foreground-color;
+  font-family: 'Lato', arial, serif;
+}
+
+h1, h2, h3, h4 {
+  font-family: 'Patua One', cursive;
+}
+
+#three {
+  width: 100vw;
+  height: 100vh;
+
+  position: fixed;
+  top: 0;
+  left: 0;
+}
+
+.name {
+  opacity: 0;
+}
+
+header {
+  display: none;
+}

@@ -8,10 +8,11 @@ const loadFont = require("load-bmfont");
 const createGeometry = require("three-bmfont-text");
 const MSDFShader = require("three-bmfont-text/shaders/msdf");
 
-const shaders = require("./shaders.js");
+import fragmentShader from '../assets/shaders/fragment.glsl'
+import vertexShader from '../assets/shaders/vertex.glsl'
 
-import fontFile from '../assets/PatuaOne-Regular.fnt';
-import fontAtlas from '../assets/PatuaOne-Regular.png';
+import fontFile from '../assets/fonts/PatuaOne-Regular.fnt';
+import fontAtlas from '../assets/fonts/PatuaOne-Regular.png';
 
 class App {
 	constructor() {
@@ -21,6 +22,7 @@ class App {
       alpha: true,
 			antialias: true
     });
+    
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
     this.renderer.setSize(window.innerWidth, window.innerHeight);
     this.renderer.setClearColor(0x000000, 0);
@@ -100,16 +102,12 @@ class App {
   createMesh() {
     this.geometry = new THREE.TorusKnotGeometry(9, 3, 768, 3, 4, 3);
     this.material = new THREE.ShaderMaterial({
-      vertexShader: shaders.vert,
-      fragmentShader: shaders.frag,
+      vertexShader: vertexShader,
+      fragmentShader: fragmentShader,
       uniforms: {
         uTime: { value: 0 },
         uTexture: { value: this.rt.texture }
-      },
-			extensions: {
-				derivatives: true
-			},
-			// glslVersion: THREE.GLSL1
+      }
     });
 
     this.mesh = new THREE.Mesh(this.geometry, this.material);

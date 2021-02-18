@@ -15,6 +15,12 @@ a {
   color: white;
   text-decoration: underline;
   padding: 0.8rem 0.8rem 0.8rem 0.4rem;
+
+  transition: all 0.3s ease-in-out;
+
+  &:hover {
+    color: $foreground-color;
+  }
 }
 
 .name {
@@ -63,7 +69,7 @@ header {
 }
 
 .wrap {
-  max-width: 900px;
+  max-width: 950px;
   margin: 0 auto;
 }
 .wrap-g {
@@ -71,8 +77,8 @@ header {
   position: relative;
   z-index: 1;
   
-  // background-color: rgba(0,0,0,0.7);
-  background: radial-gradient(circle, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.45) 35%, rgba(0,0,0,0) 70%);
+  background-color: rgba(0,0,0,0.7);
+  background: radial-gradient(circle, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.45) 45%, rgba(0,0,0,0) 70%);
 }
 
 .push {
@@ -122,6 +128,7 @@ header {
   &_list {
     li {
       display: block;
+      margin-bottom: 0.3rem;
     }
   }
 }

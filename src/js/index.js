@@ -40,8 +40,28 @@ class App {
 	}
 
 	init() {
+    this.rotateHTMLList()
+    this.initFont()
+    
+    this.addLights();
+    this.addControls()
 
-		loadFont(fontFile, (err, font) => {
+		this.addListeners()
+	}
+
+  rotateHTMLList() {
+    const list = document.querySelectorAll('.rotate-list')
+    list.forEach(val => {
+      const el = [...val.getElementsByTagName('li')]
+      
+      el.forEach(li => {
+        li.setAttribute('style', `--rotY: ${ Math.floor(Math.random() * 37) + 8 }deg; --rotZ: ${ Math.floor(Math.random() * 8) - 4 }deg`)
+      })
+    }) 
+  }
+
+  initFont() {
+    loadFont(fontFile, (err, font) => {
       this.fontGeometry = createGeometry({
         font,
         text: "hello, i'm ro"
@@ -59,30 +79,12 @@ class App {
             color: 0x888888
           })
         );
-
+        
         this.createRenderTarget();
-        this.createMesh();
+        this.createGreetMesh();
         this.animate();
       });
-    });
-    
-    this.rotateList()
-    this.addLights()
-    this.addControls()
-
-		window.addEventListener('resize', this.resize.bind(this));
-	}
-
-  rotateList() {
-    const list = document.querySelectorAll('.rotate-list')
-    list.forEach(val => {
-      const el = [...val.getElementsByTagName('li')]
-      
-      el.forEach(li => {
-        li.setAttribute('style', `--rotY: ${ Math.floor(Math.random() * 37) + 8 }deg; --rotZ: ${ Math.floor(Math.random() * 8) - 4 }deg`)
-      })
     })
-    
   }
 
   addLights() {
@@ -134,7 +136,7 @@ class App {
     this.rtScene.add(this.text);
   }
 
-  createMesh() {
+  createGreetMesh() {
     this.geometry = new THREE.BoxGeometry(150, 10, 10, 32, 32, 32)
     this.geometry.receiveShadow = true;
     
@@ -159,10 +161,11 @@ class App {
 
     this.scene.add(this.greet);
   }
-	
 
 	animate() {
     requestAnimationFrame(this.animate.bind(this));
+    this.greet.rotation.y += 0.001;
+
     this.render();
   }
 
@@ -178,6 +181,10 @@ class App {
     this.renderer.setRenderTarget(null);
 
     this.renderer.render(this.scene, this.camera);
+  }
+
+  addListeners() {
+    window.addEventListener('resize', this.resize.bind(this))
   }
 
 	resize() {

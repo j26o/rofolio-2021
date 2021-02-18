@@ -5,8 +5,8 @@ const loadFont = require("load-bmfont");
 const createGeometry = require("three-bmfont-text");
 const MSDFShader = require("three-bmfont-text/shaders/msdf");
 
-import fragmentShader from '../assets/shaders/fragment.glsl'
-import vertexShader from '../assets/shaders/vertex.glsl'
+import fragmentShader from '../assets/shaders/greetFragment.glsl'
+import vertexShader from '../assets/shaders/greetVertex.glsl'
 
 import fontFile from '../assets/fonts/PatuaOne-Regular.fnt';
 import fontAtlas from '../assets/fonts/PatuaOne-Regular.png';
@@ -15,9 +15,6 @@ import dat from 'dat.gui'
 
 class App {
 	constructor() {
-		this.turn = 0;
-    window.scrollTop = 0;
-
 		this.renderer = new THREE.WebGL1Renderer({
       alpha: true,
 			antialias: true
@@ -59,7 +56,7 @@ class App {
             side: THREE.DoubleSide,
             transparent: true,
             negate: false,
-            color: 0xbbbbbb
+            color: 0x888888
           })
         );
 
@@ -68,12 +65,25 @@ class App {
         this.animate();
       });
     });
-
+    
+    this.rotateList()
     this.addLights()
     this.addControls()
 
 		window.addEventListener('resize', this.resize.bind(this));
 	}
+
+  rotateList() {
+    const list = document.querySelectorAll('.rotate-list')
+    list.forEach(val => {
+      const el = [...val.getElementsByTagName('li')]
+      
+      el.forEach(li => {
+        li.setAttribute('style', `--rotY: ${ Math.floor(Math.random() * 37) + 8 }deg; --rotZ: ${ Math.floor(Math.random() * 8) - 4 }deg`)
+      })
+    })
+    
+  }
 
   addLights() {
     this.ambient = new THREE.AmbientLight(0x404040)
@@ -84,6 +94,10 @@ class App {
 
   addControls() {
     this.controls = new OrbitControls(this.camera, this.renderer.domElement);  
+    this.controls.enableZoom = false;
+    this.controls.enablePan = false;
+    // this.controls.autoRotate = true;
+
 
     this.gui = new dat.GUI();
 
@@ -92,7 +106,7 @@ class App {
     this.lights.add(this.ambient.position, 'x', -100, 100).name('X').listen()
     this.lights.add(this.ambient.position, 'y', -100, 100).name('Y').listen()
     this.lights.add(this.ambient.position, 'z', -100, 100).name('Z').listen()
-    this.lights.open()
+    // this.lights.open()
   }
 
 	createRenderTarget() {

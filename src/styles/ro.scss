@@ -1,12 +1,20 @@
 body, html {
   background: $body-background-color;
-  color: $foreground-color;
+
   font-family: 'Lato', arial, serif;
   font-size: 20px;
+  line-height: 2rem;
+  color: $foreground-color;
 }
 
 h1, h2, h3, h4 {
-  font-family: 'Patua One', cursive;
+  font-family: 'Patua One', Georgia, 'Times New Roman', Times, serif;
+}
+
+a {
+  color: white;
+  text-decoration: underline;
+  padding: 0.8rem 0.8rem 0.8rem 0.4rem;
 }
 
 .name {
@@ -15,6 +23,22 @@ h1, h2, h3, h4 {
 
 header {
   display: none;
+}
+
+.footer {
+  color: $foreground-color;
+  text-align: center;
+  position: relative;
+  z-index: 1;
+
+  p {
+    font-size: 0.6rem;
+
+    a {
+      color: rgba(255,255,255,0.8);
+      padding-right: 0.3rem;
+    }
+  }
 }
 
 .visually-hidden {
@@ -38,26 +62,78 @@ header {
   z-index: 0;
 }
 
-.content {
-  width: 100%;
-  padding: 2rem;
-  min-width: 375px;
-  max-width: 768px;
-  min-height: 50vh;
+.wrap {
+  max-width: 900px;
+  margin: 0 auto;
+}
+.wrap-g {
+  display: block;
   position: relative;
   z-index: 1;
+  
+  // background-color: rgba(0,0,0,0.7);
+  background: radial-gradient(circle, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.45) 35%, rgba(0,0,0,0) 70%);
+}
 
-  margin: 0 auto;
+.push {
+  height: 65vh;
+  pointer-events: none;
+  opacity: 0;
+}
 
+.content {
+  width: 100%;
+  min-width: 375px;
+
+  margin: 4rem auto;
+  padding: 4rem 0;
   text-align: center;
 
-  &:first-of-type {
-    height: 65vh;
+  &.greeting {
+    margin-top: 0;
+  }
+
+  p {
+    padding: 0 3rem;
   }
 }
 
 .head {
-  font-size: 3rem;
-  color: #bbbbbb;
+  font-size: 2.5rem;
+  color: $foreground-color;
   margin-bottom: 3rem;
+  margin: 1rem auto;
+
+  &:first-child {
+    margin: 0 0 1rem;
+  }
+}
+
+.skills {
+  &_list {
+    li {
+      display: inline-block;
+      padding: 1rem;
+    }
+  }
+}
+
+.works {
+  &_list {
+    li {
+      display: block;
+    }
+  }
+}
+
+.rotate-list {
+  li {
+    transform: perspective(1500px) rotateY( var(--rotY) ) rotateZ( var(--rotZ) );
+    transition: all 0.3s ease-in-out;
+
+    &:hover {
+      transform: perspective(3000px) rotateY(0);
+      color: white;
+    }
+  }
 }

@@ -43,9 +43,6 @@ class App {
     this.rotateHTMLList()
     this.initFont()
     
-    this.addLights();
-    this.addControls()
-
 		this.addListeners()
 	}
 
@@ -64,7 +61,7 @@ class App {
     loadFont(fontFile, (err, font) => {
       this.fontGeometry = createGeometry({
         font,
-        text: "hello, i'm ro"
+        text: "hello world! i'm ro"
       });
 
       // Load texture containing font glyps
@@ -82,33 +79,77 @@ class App {
         
         this.createRenderTarget();
         this.createGreetMesh();
+
+				// this.addLights();
+    		// this.addControls()
+
         this.animate();
       });
     })
   }
 
   addLights() {
-    this.ambient = new THREE.AmbientLight(0x404040)
-    this.directional = new THREE.DirectionalLight( 0xffffff, 1 )
-    this.scene.add(this.ambient)
-    this.scene.add(this.directional)
+    this.hemiLight = new THREE.HemisphereLight( 0xffffff, 0xffffff, 0.6 );
+    this.hemiLight.color.setHSL( 0.6, 1, 0.6 );
+    this.hemiLight.groundColor.setHSL( 0.095, 1, 0.75 );
+    this.hemiLight.position.set( 0, 50, 0 );
+    this.scene.add( this.hemiLight );
+
+    this.hemiLightHelper = new THREE.HemisphereLightHelper( this.hemiLight, 10 );
+    this.scene.add( this.hemiLightHelper );
+
+    //
+
+    this.dirLight = new THREE.DirectionalLight( 0xffffff, 1 );
+    this.dirLight.color.setHSL( 0.1, 1, 0.95 );
+    this.dirLight.position.set( - 1, 1.75, 1 );
+    this.dirLight.position.multiplyScalar( 30 );
+    this.scene.add( this.dirLight );
+
+    this.dirLight.castShadow = true;
+
+    this.dirLight.shadow.mapSize.width = 2048;
+    this.dirLight.shadow.mapSize.height = 2048;
+
+    const d = 60;
+
+    this.dirLight.shadow.camera.left = - d;
+    this.dirLight.shadow.camera.right = d;
+    this.dirLight.shadow.camera.top = d;
+    this.dirLight.shadow.camera.bottom = - d;
+
+    this.dirLight.shadow.camera.far = 3500;
+    this.dirLight.shadow.bias = - 0.0001;
+
+    this.dirLightHelper = new THREE.DirectionalLightHelper( this.dirLight, 10 );
+    this.scene.add( this.dirLightHelper );
   }
 
   addControls() {
     this.controls = new OrbitControls(this.camera, this.renderer.domElement);  
-    this.controls.enableZoom = false;
+    // this.controls.enableZoom = false;
     this.controls.enablePan = false;
     // this.controls.autoRotate = true;
 
 
     this.gui = new dat.GUI();
+		this.guiSettings = {
+			greet: true
+		}
+
+		this.dirLight.visible = this.guiSettings.greet;
+		this.dirLightHelper.visible = this.guiSettings.greet;
 
     // Lights
     this.lights = this.gui.addFolder('Lights');
-    this.lights.add(this.ambient.position, 'x', -100, 100).name('X').listen()
-    this.lights.add(this.ambient.position, 'y', -100, 100).name('Y').listen()
-    this.lights.add(this.ambient.position, 'z', -100, 100).name('Z').listen()
-    // this.lights.open()
+    // this.lights.add(this.dirLight.position, 'x', -100, 100, 0.5).name('X').listen()
+    // this.lights.add(this.dirLight.position, 'y', -100, 100, 0.5).name('Y').listen()
+    // this.lights.add(this.dirLight.position, 'z', -100, 100, 0.5).name('Z').listen()
+    this.lights.add(this.guiSettings, 'greet').onChange(val => {
+			this.dirLight.visible = val
+			this.dirLightHelper.visible = val
+		})
+    this.lights.open()
   }
 
 	createRenderTarget() {
@@ -119,7 +160,7 @@ class App {
     );
 
     this.rtCamera = new THREE.PerspectiveCamera(45, 1, 0.1, 1000);
-    this.rtCamera.position.z = 2.5;
+    this.rtCamera.position.z = 4;
 
     this.rtScene = new THREE.Scene();
     this.rtScene.background = new THREE.Color("#000000");
@@ -128,43 +169,51 @@ class App {
     this.text = new THREE.Mesh(this.fontGeometry, this.fontMaterial);
 
     // Adjust dimensions
-    this.text.position.set(-0.8, -0.525, 0);
+    this.text.position.set(-0.88, -0.525, 0);
     this.text.rotation.set(Math.PI, 0, 0);
-    this.text.scale.set(0.008, 0.04, 1);
+    this.text.scale.set(0.0075, 0.07, 1);
 
     // Add text mesh to buffer scene
     this.rtScene.add(this.text);
   }
 
   createGreetMesh() {
-    this.geometry = new THREE.BoxGeometry(150, 10, 10, 32, 32, 32)
+    this.geometry = new THREE.BoxGeometry(150, 10, 10, 32, 32, 32);
     this.geometry.receiveShadow = true;
+
+    let uniforms = THREE.UniformsUtils.merge([
+      THREE.UniformsLib[ "lights" ]
+    ])
+
+    uniforms.uTime = { value: 0 }
+    uniforms.uTexture = { value: this.rt.texture }
+
     
     this.material = new THREE.ShaderMaterial({
       vertexShader: vertexShader,
       fragmentShader: fragmentShader,
-      uniforms: {
-        uTime: { value: 0 },
-        uTexture: { value: this.rt.texture }
-      },
+      uniforms: uniforms,
       receiveShadow: true,
+      lights: true,
       // wireframe: true
     });
 
     this.greet = new THREE.Mesh(this.geometry, this.material);
+    this.greet.castShadow = true;
+    this.greet.receiveShadow = true;
     this.greet.position.z = -60;
     this.greet.position.x = -25;
 
     this.greet.rotation.x = -0.2;
-    this.greet.rotation.y = -0.9;
-    this.greet.rotation.z = 0.02;
+    this.greet.rotation.y = -0.8;
+    this.greet.rotation.z = 0;
 
     this.scene.add(this.greet);
   }
 
 	animate() {
     requestAnimationFrame(this.animate.bind(this));
-    this.greet.rotation.y += 0.001;
+    // this.greet.rotation.y += 0.001;
 
     this.render();
   }

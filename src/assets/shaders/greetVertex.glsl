@@ -1,5 +1,8 @@
 varying vec2 vUv;
 uniform float uTime;
+attribute vec4 color;
+varying vec4 vColor;
+varying vec3 vPosition;
 
 mat4 rotation3d(vec3 axis, float angle) {
 	axis = normalize(axis);
@@ -23,18 +26,17 @@ void main() {
 	float time = uTime * 0.2;
 	vUv = uv;
 
+	vColor = color;
+
 	vec3 pos = position;
+	vPosition = position;
 
 	vec3 axis = vec3(1., 0., 0.);
 	float twist = 0.04 * sin(time);
+	// float twist = 0.;
 	float angle = pos.x * twist;
-	// float angle = sin(pos.x * twist);
 
 	vec3 transformed = rotate(pos, axis, angle);
-
-	// float freq = 0.75;
-	// float amp = 1.;
-	// transformed.y += cos(transformed.x * freq + 0.) * amp;
 
 	gl_Position = projectionMatrix * modelViewMatrix * vec4(transformed, 1.);
 }

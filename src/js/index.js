@@ -1,6 +1,3 @@
-// import * as THREE from 'three';
-// import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
-
 global.THREE = require("three");
 const THREE = global.THREE;
 const OrbitControls = require("three-orbit-controls")(THREE);
@@ -14,31 +11,32 @@ import vertexShader from '../assets/shaders/vertex.glsl'
 import fontFile from '../assets/fonts/PatuaOne-Regular.fnt';
 import fontAtlas from '../assets/fonts/PatuaOne-Regular.png';
 
+import dat from 'dat.gui'
+
 class App {
 	constructor() {
 		this.turn = 0;
+    window.scrollTop = 0;
 
 		this.renderer = new THREE.WebGL1Renderer({
       alpha: true,
 			antialias: true
     });
-    
+
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
     this.renderer.setSize(window.innerWidth, window.innerHeight);
-    this.renderer.setClearColor(0x000000, 0);
+    this.renderer.setClearColor(0x000000, 1);
 
     this.camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 1, 1000 );
 
-    this.camera.position.z = 60;
+    this.camera.position.z = 3;
 
     this.scene = new THREE.Scene();
-
-    this.controls = new OrbitControls(this.camera, this.renderer.domElement);    
 
     this.clock = new THREE.Clock();
 
 		const canvas = this.renderer.domElement;
-    const container = document.querySelector('#webgl');
+    const container = document.querySelector('#viz');
     container.appendChild(canvas);
 
 		this.init();
@@ -49,7 +47,7 @@ class App {
 		loadFont(fontFile, (err, font) => {
       this.fontGeometry = createGeometry({
         font,
-        text: "ro baldovino"
+        text: "hello, i'm ro"
       });
 
       // Load texture containing font glyps
@@ -61,7 +59,7 @@ class App {
             side: THREE.DoubleSide,
             transparent: true,
             negate: false,
-            color: 0xffffff
+            color: 0xbbbbbb
           })
         );
 
@@ -71,8 +69,31 @@ class App {
       });
     });
 
+    this.addLights()
+    this.addControls()
+
 		window.addEventListener('resize', this.resize.bind(this));
 	}
+
+  addLights() {
+    this.ambient = new THREE.AmbientLight(0x404040)
+    this.directional = new THREE.DirectionalLight( 0xffffff, 1 )
+    this.scene.add(this.ambient)
+    this.scene.add(this.directional)
+  }
+
+  addControls() {
+    this.controls = new OrbitControls(this.camera, this.renderer.domElement);  
+
+    this.gui = new dat.GUI();
+
+    // Lights
+    this.lights = this.gui.addFolder('Lights');
+    this.lights.add(this.ambient.position, 'x', -100, 100).name('X').listen()
+    this.lights.add(this.ambient.position, 'y', -100, 100).name('Y').listen()
+    this.lights.add(this.ambient.position, 'z', -100, 100).name('Z').listen()
+    this.lights.open()
+  }
 
 	createRenderTarget() {
     // Render Target setup
@@ -91,7 +112,7 @@ class App {
     this.text = new THREE.Mesh(this.fontGeometry, this.fontMaterial);
 
     // Adjust dimensions
-    this.text.position.set(-0.965, -0.525, 0);
+    this.text.position.set(-0.8, -0.525, 0);
     this.text.rotation.set(Math.PI, 0, 0);
     this.text.scale.set(0.008, 0.04, 1);
 
@@ -100,33 +121,39 @@ class App {
   }
 
   createMesh() {
-    this.geometry = new THREE.TorusKnotGeometry(9, 3, 768, 3, 4, 3);
+    this.geometry = new THREE.BoxGeometry(150, 10, 10, 32, 32, 32)
+    this.geometry.receiveShadow = true;
+    
     this.material = new THREE.ShaderMaterial({
       vertexShader: vertexShader,
       fragmentShader: fragmentShader,
       uniforms: {
         uTime: { value: 0 },
         uTexture: { value: this.rt.texture }
-      }
+      },
+      receiveShadow: true,
+      // wireframe: true
     });
 
-    this.mesh = new THREE.Mesh(this.geometry, this.material);
+    this.greet = new THREE.Mesh(this.geometry, this.material);
+    this.greet.position.z = -60;
+    this.greet.position.x = -25;
 
-    this.scene.add(this.mesh);
+    this.greet.rotation.x = -0.2;
+    this.greet.rotation.y = -0.9;
+    this.greet.rotation.z = 0.02;
+
+    this.scene.add(this.greet);
   }
 	
 
 	animate() {
     requestAnimationFrame(this.animate.bind(this));
-
-		// this.cube.rotation.x += 0.01;
-		// this.cube.rotation.y += 0.01;
-
     this.render();
   }
 
 	render() {
-    this.controls.update();
+    if(this.controls) this.controls.update();
 
     // Update time
     this.material.uniforms.uTime.value = this.clock.getElapsedTime();

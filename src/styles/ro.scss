@@ -1,20 +1,12 @@
-body {
+body, html {
   background: $body-background-color;
   color: $foreground-color;
   font-family: 'Lato', arial, serif;
+  font-size: 20px;
 }
 
 h1, h2, h3, h4 {
   font-family: 'Patua One', cursive;
-}
-
-#three {
-  width: 100vw;
-  height: 100vh;
-
-  position: fixed;
-  top: 0;
-  left: 0;
 }
 
 .name {
@@ -23,4 +15,49 @@ h1, h2, h3, h4 {
 
 header {
   display: none;
+}
+
+.visually-hidden {
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  height: 1px;
+  overflow: hidden;
+  position: absolute;
+  white-space: nowrap;
+  width: 1px;
+}
+
+.viz {
+  width: 100vw;
+  height: 100vh;
+
+  position: fixed;
+  top: 0;
+  left: 0;
+
+  z-index: 0;
+}
+
+.content {
+  width: 100%;
+  padding: 2rem;
+  min-width: 375px;
+  max-width: 768px;
+  min-height: 50vh;
+  position: relative;
+  z-index: 1;
+
+  margin: 0 auto;
+
+  text-align: center;
+
+  &:first-of-type {
+    height: 65vh;
+  }
+}
+
+.head {
+  font-size: 3rem;
+  color: #bbbbbb;
+  margin-bottom: 3rem;
 }

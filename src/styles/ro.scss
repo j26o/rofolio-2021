@@ -115,7 +115,12 @@ header {
   }
 }
 
+
+
 .skills {
+  width: 65%;
+  margin: 0 auto;
+  
   &_list {
     li {
       display: inline-block;
@@ -129,6 +134,15 @@ header {
     li {
       display: block;
       margin-bottom: 0.3rem;
+    }
+  }
+
+  &-prev {
+    width: 65%;
+    margin: 0 auto;
+    
+    li {
+      display: inline-block;
     }
   }
 }

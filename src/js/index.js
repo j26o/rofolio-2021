@@ -95,8 +95,8 @@ class App {
         this.createRenderTarget();
         this.createGreetMesh();
 
-				this.addLights();
-    		this.addControls()
+				// this.addLights();
+    		// this.addControls()
 
         this.animate();
       });

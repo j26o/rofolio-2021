@@ -1,11 +1,11 @@
 
 .cache/
 coverage/
-dist
+dist/*
 # !dist/index.html
 node_modules/
 *.log
-
+.firebase/
 # OS generated files
 .DS_Store
 .DS_Store?

@@ -1,9 +1,11 @@
-global.THREE = require("three");
-const THREE = global.THREE;
-const OrbitControls = require("three-orbit-controls")(THREE);
-const loadFont = require("load-bmfont");
-const createGeometry = require("three-bmfont-text");
-const MSDFShader = require("three-bmfont-text/shaders/msdf");
+
+import * as THREE from 'three';
+import loadFont from 'load-bmfont';
+
+import dat from 'dat.gui'
+import OrbitControls from 'three-orbit-controls';
+
+import FontFaceObserver from 'fontfaceobserver';
 
 import fragmentShader from '../assets/shaders/greetFragment.glsl'
 import vertexShader from '../assets/shaders/greetVertex.glsl'
@@ -11,10 +13,15 @@ import vertexShader from '../assets/shaders/greetVertex.glsl'
 import fontFile from '../assets/fonts/PatuaOne-Regular.fnt';
 import fontAtlas from '../assets/fonts/PatuaOne-Regular.png';
 
-import dat from 'dat.gui'
-
+global.THREE = THREE;
+const createGeometry = require("three-bmfont-text");
+const MSDFShader = require("three-bmfont-text/shaders/msdf");
 class App {
 	constructor() {
+		this.width = window.innerWidth;
+		this.height = window.innerHeight;
+		this.camZ = 3;
+		
 		this.renderer = new THREE.WebGL1Renderer({
       alpha: true,
 			antialias: true
@@ -26,7 +33,8 @@ class App {
 
     this.camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 1, 1000 );
 
-    this.camera.position.z = 3;
+    this.camera.position.z = this.camZ;
+		this.camera.fov = 2 * Math.atan((this.height/2 * this.camZ)) * (180/Math.PI);
 
     this.scene = new THREE.Scene();
 
@@ -36,14 +44,22 @@ class App {
     const container = document.querySelector('#viz');
     container.appendChild(canvas);
 
-		this.init();
-	}
+		const fontPatuaOne = new Promise((resolve, reject) => {
+			new FontFaceObserver('Patua One').load().then(()=>{ resolve() })
+		})
 
-	init() {
-    this.rotateHTMLList()
-    this.initFont()
-    
-		this.addListeners()
+		const fontLato = new Promise((resolve, reject) => {
+			new FontFaceObserver('Lato').load().then(()=>{ resolve() })
+		})
+
+		const fontProm = [fontLato, fontPatuaOne];
+		Promise.all(fontProm).then(()=>{
+			this.rotateHTMLList()
+			this.initFont()
+			
+			this.addListeners()
+		})
+		
 	}
 
   rotateHTMLList() {
@@ -61,7 +77,7 @@ class App {
     loadFont(fontFile, (err, font) => {
       this.fontGeometry = createGeometry({
         font,
-        text: "hello world! i'm ro"
+        text: "hello! i'm ro"
       });
 
       // Load texture containing font glyps
@@ -88,7 +104,90 @@ class App {
     })
   }
 
-  addLights() {
+  createRenderTarget() {
+    // Render Target setup
+    this.rt = new THREE.WebGLRenderTarget(
+      window.innerWidth,
+      window.innerHeight
+    );
+
+    this.rtCamera = new THREE.PerspectiveCamera(45, 1, 0.1, 1000);
+    this.rtCamera.position.z = 4;
+
+    this.rtScene = new THREE.Scene();
+    this.rtScene.background = new THREE.Color("#000000");
+    // this.rtScene.background = new THREE.Color("#ffffff");
+
+    // Create text mesh with font geometry and material
+    this.text = new THREE.Mesh(this.fontGeometry, this.fontMaterial);
+
+    // Adjust dimensions
+    this.text.position.set(-0.88, -1.4, 0);
+    this.text.rotation.set(Math.PI, 0, 0);
+    this.text.scale.set(0.01, 0.088, 1);
+
+    // Add text mesh to buffer scene
+    this.rtScene.add(this.text);
+  }
+
+  createGreetMesh() {
+    this.geometry = new THREE.BoxGeometry(150, 10, 10, 24, 24, 24);
+    this.geometry.receiveShadow = true;
+
+    let uniforms = THREE.UniformsUtils.merge([
+      THREE.UniformsLib[ "lights" ]
+    ])
+
+    uniforms.uTime = { value: 0 }
+    uniforms.uTexture = { value: this.rt.texture }
+		uniforms.uPi = { value: THREE.PI }
+    
+    this.material = new THREE.ShaderMaterial({
+      vertexShader: vertexShader,
+      fragmentShader: fragmentShader,
+      uniforms: uniforms,
+      receiveShadow: true,
+      lights: true,
+      // wireframe: true
+    });
+
+    this.greet = new THREE.Mesh(this.geometry, this.material);
+    this.greet.castShadow = true;
+    this.greet.receiveShadow = true;
+    this.greet.position.z = -60;
+    this.greet.position.x = -25;
+
+    this.greet.rotation.x = -0.2;
+    this.greet.rotation.y = -0.8;
+    this.greet.rotation.z = 0;
+
+    this.scene.add(this.greet);
+  }
+
+	animate() {
+    requestAnimationFrame(this.animate.bind(this));
+    this.render();
+  }
+
+	render() {
+    if(this.controls) this.controls.update();
+
+    // Update time
+    this.material.uniforms.uTime.value = this.clock.getElapsedTime();
+
+    // Draw Render Target
+    this.renderer.setRenderTarget(this.rt);
+    this.renderer.render(this.rtScene, this.rtCamera);
+    this.renderer.setRenderTarget(null);
+
+    this.renderer.render(this.scene, this.camera);
+  }
+
+  addListeners() {
+    window.addEventListener('resize', this.resize.bind(this))
+  }
+
+	addLights() {
     this.hemiLight = new THREE.HemisphereLight( 0xffffff, 0xffffff, 0.6 );
     this.hemiLight.color.setHSL( 0.6, 1, 0.6 );
     this.hemiLight.groundColor.setHSL( 0.095, 1, 0.75 );
@@ -152,97 +251,13 @@ class App {
     this.lights.open()
   }
 
-	createRenderTarget() {
-    // Render Target setup
-    this.rt = new THREE.WebGLRenderTarget(
-      window.innerWidth,
-      window.innerHeight
-    );
-
-    this.rtCamera = new THREE.PerspectiveCamera(45, 1, 0.1, 1000);
-    this.rtCamera.position.z = 4;
-
-    this.rtScene = new THREE.Scene();
-    this.rtScene.background = new THREE.Color("#000000");
-
-    // Create text mesh with font geometry and material
-    this.text = new THREE.Mesh(this.fontGeometry, this.fontMaterial);
-
-    // Adjust dimensions
-    this.text.position.set(-0.88, -0.525, 0);
-    this.text.rotation.set(Math.PI, 0, 0);
-    this.text.scale.set(0.0075, 0.07, 1);
-
-    // Add text mesh to buffer scene
-    this.rtScene.add(this.text);
-  }
-
-  createGreetMesh() {
-    this.geometry = new THREE.BoxGeometry(150, 10, 10, 32, 32, 32);
-    this.geometry.receiveShadow = true;
-
-    let uniforms = THREE.UniformsUtils.merge([
-      THREE.UniformsLib[ "lights" ]
-    ])
-
-    uniforms.uTime = { value: 0 }
-    uniforms.uTexture = { value: this.rt.texture }
-
-    
-    this.material = new THREE.ShaderMaterial({
-      vertexShader: vertexShader,
-      fragmentShader: fragmentShader,
-      uniforms: uniforms,
-      receiveShadow: true,
-      lights: true,
-      // wireframe: true
-    });
-
-    this.greet = new THREE.Mesh(this.geometry, this.material);
-    this.greet.castShadow = true;
-    this.greet.receiveShadow = true;
-    this.greet.position.z = -60;
-    this.greet.position.x = -25;
-
-    this.greet.rotation.x = -0.2;
-    this.greet.rotation.y = -0.8;
-    this.greet.rotation.z = 0;
-
-    this.scene.add(this.greet);
-  }
-
-	animate() {
-    requestAnimationFrame(this.animate.bind(this));
-    // this.greet.rotation.y += 0.001;
-
-    this.render();
-  }
-
-	render() {
-    if(this.controls) this.controls.update();
-
-    // Update time
-    this.material.uniforms.uTime.value = this.clock.getElapsedTime();
-
-    // Draw Render Target
-    this.renderer.setRenderTarget(this.rt);
-    this.renderer.render(this.rtScene, this.rtCamera);
-    this.renderer.setRenderTarget(null);
-
-    this.renderer.render(this.scene, this.camera);
-  }
-
-  addListeners() {
-    window.addEventListener('resize', this.resize.bind(this))
-  }
-
 	resize() {
     let width = window.innerWidth;
     let height = window.innerHeight;
 
     this.camera.aspect = width / height;
-    this.camera.updateProjectionMatrix();
     this.renderer.setSize(width, height);
+    this.camera.updateProjectionMatrix();
   }
 }
 

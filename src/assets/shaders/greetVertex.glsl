@@ -1,8 +1,11 @@
-varying vec2 vUv;
-uniform float uTime;
 attribute vec4 color;
+uniform float uTime;
+uniform float uPi;
+
+varying vec2 vUv;
 varying vec4 vColor;
 varying vec3 vPosition;
+varying float vTwist;
 
 mat4 rotation3d(vec3 axis, float angle) {
 	axis = normalize(axis);
@@ -34,6 +37,9 @@ void main() {
 	vec3 axis = vec3(1., 0., 0.);
 	float twist = 0.04 * sin(time);
 	// float twist = 0.;
+	vTwist = twist;
+	
+	// float angle = sin((pos.x * twist) + time);
 	float angle = pos.x * twist;
 
 	vec3 transformed = rotate(pos, axis, angle);

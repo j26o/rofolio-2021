@@ -1,6 +1,7 @@
 varying vec2 vUv;
 varying vec3 vPosition;
 varying vec4 vColor;
+varying float vTwist;
 
 uniform sampler2D uTexture;
 uniform float uTime;
@@ -12,8 +13,9 @@ void main() {
     // vec2 uv = fract(vUv * repeat);
     vec3 texture = texture2D(uTexture, uv).rgb;
 
-    float fog = clamp(vPosition.z / 4., 0., 1.);
+    float fog = clamp(vPosition.z/5., 0., 1.);
     vec3 fragColor = mix(vec3(0.), texture, fog);
+    // vec3 fragColor = texture;
 
     gl_FragColor = vColor * vec4(fragColor, 1.);
 }

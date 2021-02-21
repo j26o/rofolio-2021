@@ -1,10 +1,10 @@
 varying vec2 vUv;
 varying vec3 vPosition;
 varying vec4 vColor;
-varying float vTwist;
 
 uniform sampler2D uTexture;
 uniform float uTime;
+uniform float hoverState;
 
 void main() {
     float time = uTime * 0.3;
@@ -15,7 +15,9 @@ void main() {
 
     float fog = clamp(vPosition.z/5., 0., 1.);
     vec3 fragColor = mix(vec3(0.), texture, fog);
+    
     // vec3 fragColor = texture;
 
     gl_FragColor = vColor * vec4(fragColor, 1.);
+    // gl_FragColor.rgb += 0.1*vec3(vNoise);
 }

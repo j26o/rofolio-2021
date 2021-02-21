@@ -37,7 +37,10 @@ class App {
 		this.camera.fov = 2 * Math.atan((this.height/2 * this.camZ)) * (180/Math.PI);
 
     this.scene = new THREE.Scene();
+		
     this.clock = new THREE.Clock();
+		this.raycaster = new THREE.Raycaster();
+    this.mouse = new THREE.Vector2();
 
 		const canvas = this.renderer.domElement;
     const container = document.querySelector('#viz');
@@ -82,6 +85,7 @@ class App {
       // Load texture containing font glyps
       this.loader = new THREE.TextureLoader();
       this.loader.load(fontAtlas, texture => {
+				texture.needsUpdate = true
         this.fontMaterial = new THREE.RawShaderMaterial(
           MSDFShader({
             map: texture,
@@ -140,6 +144,8 @@ class App {
     uniforms.uTime = { value: 0 }
     uniforms.uTexture = { value: this.rt.texture }
 		uniforms.uPi = { value: THREE.PI }
+		uniforms.hover =  {value: new THREE.Vector2(0.5,0.5)}
+		uniforms.hoverState =  {value: 0}
     
     this.material = new THREE.ShaderMaterial({
       vertexShader: vertexShader,
@@ -188,6 +194,7 @@ class App {
 
   addListeners() {
     window.addEventListener('resize', this.resize.bind(this))
+		this.mouseMove()
   }
 
 	addLights() {
@@ -253,6 +260,28 @@ class App {
 		})
     this.lights.open()
   }
+
+	mouseMove(){
+		window.addEventListener( 'mousemove', (event)=>{
+				this.mouse.x = ( event.clientX / this.width ) * 2 - 1;
+				this.mouse.y = - ( event.clientY / this.height ) * 2 + 1;
+
+				// update the picking ray with the camera and mouse position
+				this.raycaster.setFromCamera( this.mouse, this.camera );
+
+				// calculate objects intersecting the picking ray
+				const intersects = this.raycaster.intersectObjects( this.scene.children );
+
+				if(intersects.length>0){
+					// console.log(intersects[0]);
+					let obj = intersects[0].object;
+					obj.material.uniforms.hover.value = intersects[0].uv;
+					obj.material.uniforms.hoverState.value = 1;
+				} else {
+					this.greet.material.uniforms.hoverState.value = 0;
+				}
+		}, false );
+	}
 
 	resize() {
     this.width = window.innerWidth;

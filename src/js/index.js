@@ -1,11 +1,11 @@
 
-import * as THREE from 'three';
-import loadFont from 'load-bmfont';
+import * as THREE from 'three'
+import loadFont from 'load-bmfont'
 
 import dat from 'dat.gui'
-import OrbitControls from 'three-orbit-controls';
+import {OrbitControls} from 'three/examples/jsm/controls/OrbitControls.js'
 
-import FontFaceObserver from 'fontfaceobserver';
+import FontFaceObserver from 'fontfaceobserver'
 
 import fragmentShader from '../assets/shaders/greetFragment.glsl'
 import vertexShader from '../assets/shaders/greetVertex.glsl'
@@ -28,16 +28,15 @@ class App {
     });
 
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
-    this.renderer.setSize(window.innerWidth, window.innerHeight);
+    this.renderer.setSize(this.width, this.height);
     this.renderer.setClearColor(0x000000, 1);
 
-    this.camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 1, 1000 );
+    this.camera = new THREE.PerspectiveCamera( 45, this.width / this.height, 0.001, 1000 );
 
     this.camera.position.z = this.camZ;
 		this.camera.fov = 2 * Math.atan((this.height/2 * this.camZ)) * (180/Math.PI);
 
     this.scene = new THREE.Scene();
-
     this.clock = new THREE.Clock();
 
 		const canvas = this.renderer.domElement;
@@ -96,8 +95,8 @@ class App {
         this.createRenderTarget();
         this.createGreetMesh();
 
-				// this.addLights();
-    		// this.addControls()
+				this.addLights();
+    		this.addControls()
 
         this.animate();
       });
@@ -107,32 +106,32 @@ class App {
   createRenderTarget() {
     // Render Target setup
     this.rt = new THREE.WebGLRenderTarget(
-      window.innerWidth,
-      window.innerHeight
+      this.width,
+			this.height
     );
 
-    this.rtCamera = new THREE.PerspectiveCamera(45, 1, 0.1, 1000);
-    this.rtCamera.position.z = 4;
+    this.rtCamera = new THREE.PerspectiveCamera(45, 1, 0.1, 1000)
+    this.rtCamera.position.z = 4
 
-    this.rtScene = new THREE.Scene();
-    this.rtScene.background = new THREE.Color("#000000");
+    this.rtScene = new THREE.Scene()
+    this.rtScene.background = new THREE.Color("#000000")
     // this.rtScene.background = new THREE.Color("#ffffff");
 
     // Create text mesh with font geometry and material
-    this.text = new THREE.Mesh(this.fontGeometry, this.fontMaterial);
+    this.text = new THREE.Mesh(this.fontGeometry, this.fontMaterial)
 
     // Adjust dimensions
-    this.text.position.set(-0.88, -1.4, 0);
-    this.text.rotation.set(Math.PI, 0, 0);
-    this.text.scale.set(0.01, 0.088, 1);
+    this.text.position.set(-0.88, -1.4, 0)
+    this.text.rotation.set(Math.PI, 0, 0)
+    this.text.scale.set(0.01, 0.088, 1)
 
     // Add text mesh to buffer scene
-    this.rtScene.add(this.text);
+    this.rtScene.add(this.text)
   }
 
   createGreetMesh() {
-    this.geometry = new THREE.BoxGeometry(150, 10, 10, 24, 24, 24);
-    this.geometry.receiveShadow = true;
+    this.geometry = new THREE.BoxGeometry(150, 10, 10, 24, 24, 24)
+    this.geometry.receiveShadow = true
 
     let uniforms = THREE.UniformsUtils.merge([
       THREE.UniformsLib[ "lights" ]
@@ -151,17 +150,21 @@ class App {
       // wireframe: true
     });
 
-    this.greet = new THREE.Mesh(this.geometry, this.material);
-    this.greet.castShadow = true;
-    this.greet.receiveShadow = true;
-    this.greet.position.z = -60;
-    this.greet.position.x = -25;
+    this.greet = new THREE.Mesh(this.geometry, this.material)
+    this.greet.position.z = -60
+    this.greet.position.x = -25
 
-    this.greet.rotation.x = -0.2;
-    this.greet.rotation.y = -0.8;
-    this.greet.rotation.z = 0;
+    this.greet.rotation.x = -0.2
+    this.greet.rotation.y = -0.8
+    this.greet.rotation.z = 0
+		
+    this.greet.onBeforeRender = (renderer) => {
+      renderer.setRenderTarget(this.rt)
+      renderer.render(this.rtScene, this.rtCamera)
+      renderer.setRenderTarget(null)
+    }
 
-    this.scene.add(this.greet);
+    this.scene.add(this.greet)
   }
 
 	animate() {
@@ -170,17 +173,17 @@ class App {
   }
 
 	render() {
-    if(this.controls) this.controls.update();
+    if(this.controls) this.controls.update()
 
     // Update time
-    this.material.uniforms.uTime.value = this.clock.getElapsedTime();
+    this.material.uniforms.uTime.value = this.clock.getElapsedTime()
 
     // Draw Render Target
-    this.renderer.setRenderTarget(this.rt);
-    this.renderer.render(this.rtScene, this.rtCamera);
-    this.renderer.setRenderTarget(null);
+    this.renderer.setRenderTarget(this.rt)
+    this.renderer.render(this.rtScene, this.rtCamera)
+    this.renderer.setRenderTarget(null)
 
-    this.renderer.render(this.scene, this.camera);
+    this.renderer.render(this.scene, this.camera)
   }
 
   addListeners() {
@@ -227,7 +230,7 @@ class App {
   addControls() {
     this.controls = new OrbitControls(this.camera, this.renderer.domElement);  
     // this.controls.enableZoom = false;
-    this.controls.enablePan = false;
+    // this.controls.enablePan = false;
     // this.controls.autoRotate = true;
 
 
@@ -252,12 +255,14 @@ class App {
   }
 
 	resize() {
-    let width = window.innerWidth;
-    let height = window.innerHeight;
+    this.width = window.innerWidth;
+    this.height = window.innerHeight;
 
-    this.camera.aspect = width / height;
-    this.renderer.setSize(width, height);
-    this.camera.updateProjectionMatrix();
+    this.camera.aspect = this.width / this.height;
+    // this.camera.updateProjectionMatrix();
+
+		this.camera.fov = 2 * Math.atan((this.height/2 * this.camZ)) * (180/Math.PI);
+		this.renderer.setSize(this.width, this.height);
   }
 }
 

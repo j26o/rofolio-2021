@@ -76,7 +76,6 @@ header {
   display: block;
   position: relative;
   z-index: 1;
-  transform: translate(0,0,0);
   
   background-color: rgba(0,0,0,0.7);
   background: radial-gradient(circle, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.45) 45%, rgba(0,0,0,0) 70%);
@@ -89,6 +88,7 @@ header {
 }
 
 .content {
+  position: relative;
   width: 100%;
   min-width: 375px;
 
@@ -115,8 +115,6 @@ header {
     margin: 0 0 1rem;
   }
 }
-
-
 
 .skills {
   width: 65%;
@@ -148,8 +146,14 @@ header {
 }
 
 .rotate-list {
+  transform: perspective(1500px) translateZ(0);
+  perspective: 800px;
+  perspective-origin: center;
+  -webkit-font-smoothing: subpixel-antialiased;
+
   li {
-    transform: perspective(1500px) rotateY( var(--rotY) ) rotateZ( var(--rotZ) );
+    transform: rotateY(var(--rotY)) rotateZ(var(--rotZ));
+    transform-style: preserve-3d;
     transition: all 0.3s ease-in-out;
 
     &:hover {

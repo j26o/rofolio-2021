@@ -3,9 +3,14 @@ import * as THREE from 'three'
 import {OrbitControls} from 'three/examples/jsm/controls/OrbitControls.js'
 
 import FontFaceObserver from 'fontfaceobserver'
-import gsap from 'gsap';
+import imagesLoaded from 'imagesloaded'
+import gsap from 'gsap'
 
-import name from '../assets/img/ro-caps-vertical.png'
+import nameImg from '../assets/img/ro-vertical.png'
+
+import nameFragment from '../assets/shaders/fragment_name.glsl'
+import nameVertex from '../assets/shaders/vertex_name.glsl'
+
 export default class App {
 	constructor(opt) {
 		this.container = opt.dom;
@@ -19,7 +24,7 @@ export default class App {
 
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
     this.renderer.setSize(this.width, this.height);
-    this.renderer.setClearColor(0x000000, 1);
+    this.renderer.setClearColor(opt.bgColor, 1);
 
     this.camera = new THREE.PerspectiveCamera( opt.fov, this.width / this.height, 0.001, 1000 );
 
@@ -48,9 +53,13 @@ export default class App {
 			new FontFaceObserver('Lato').load().then(()=>{ resolve() })
 		})
 
-		const fontProm = [fontLato, fontPatuaOne];
+		const preloadImages = new Promise((resolve, reject) => {
+			imagesLoaded(document.querySelectorAll("img"), { background: true }, resolve);
+		});
+
+		const fontProm = [fontLato, fontPatuaOne, preloadImages];
 		Promise.all(fontProm).then(()=>{
-			this.rotateHTMLList()
+			// this.rotateHTMLList()
 			this.addListeners()
 			this.addLights()
 			this.addObjects()
@@ -59,80 +68,50 @@ export default class App {
 	}
 
 	addObjects() {
-		const geometry = new THREE.BoxGeometry(20, 100, 20, 20, 20, 20);
+		const geometry = new THREE.BoxGeometry(20, 180, 20, 32, 32, 32);
+
+		const img = document.getElementById('ro');
+		let texture = new THREE.Texture(img);
+		texture.needsUpdate = true;
 		
 		let uniforms = THREE.UniformsUtils.merge([
-			THREE.UniformsLib[ "lights" ],
-			{
-				diffuse: { type: 'c', value: new THREE.Color(0xff00ff) }
-			}
+			THREE.UniformsLib[ "lights" ]
 		])
+		uniforms.diffuse = { type: 'c', value: new THREE.Color(0xffffff) }
+		uniforms.uImage = { value: texture  }
+		uniforms.uTime = { value: 0 }
+		uniforms.lightIntensity = {type: 'f', value: 2.}
 		
-		const material = new THREE.ShaderMaterial({
+		this.material = new THREE.ShaderMaterial({
 			uniforms: uniforms,
-			side: THREE.DoubleSide,
-			lights: true,
-			vertexShader: `
-			varying vec3 vPos;
-			varying vec3 vNormal;
-			void main() {
-				vPos = (modelMatrix * vec4(position, 1.0 )).xyz;
-				vNormal = normalMatrix * normal;
-				gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0);
-			}
-			`,
-			fragmentShader: `
-			uniform vec3 diffuse;
-			varying vec3 vPos;
-			varying vec3 vNormal;
-
-			struct PointLight {
-				vec3 position;
-				vec3 color;
-			};
-			uniform PointLight pointLights[ NUM_POINT_LIGHTS ];
-
-			void main() {
-				vec4 addedLights = vec4(0.1, 0.1, 0.1, 1.0);
-				for(int l = 0; l < NUM_POINT_LIGHTS; l++) {
-					vec3 adjustedLight = pointLights[l].position + cameraPosition;
-					vec3 lightDirection = normalize(vPos - adjustedLight);
-					addedLights.rgb += clamp(dot(-lightDirection, vNormal), 0.0, 1.0) * pointLights[l].color;
-				}
-				gl_FragColor = addedLights;//mix(vec4(diffuse.x, diffuse.y, diffuse.z, 1.0), addedLights, addedLights);
-			}
-			`
+			vertexShader: nameVertex,
+			fragmentShader: nameFragment,
+      lights: true,
+			// transparent: true,
+			// wireframe: true,
+			side: THREE.FrontSide,
 		})
-
-		this.twist(geometry)
-
-		material.needsUpdate = true;
-
-		this.cube = new THREE.Mesh(geometry, material); 
+		
+		this.cube = new THREE.Mesh(geometry, this.material); 
 
 		this.scene.add(this.cube)
 	}
 
-	twist(geometry) {
-		const quaternion = new THREE.Quaternion();
-		console.log(geometry)
-		for (let i = 0; i < geometry.vertices.length; i++) {
-			// a single vertex Y position
-			const yPos = geometry.vertices[i].y;
-			const twistAmount = 10;
-			const upVec = new THREE.Vector3(0, 1, 0);
-	
-			quaternion.setFromAxisAngle(
-				upVec, 
-				(Math.PI / 180) * (yPos / twistAmount)
-			);
-	
-			geometry.vertices[i].applyQuaternion(quaternion);
-		}
-		
-		// tells Three.js to re-render this mesh
-		geometry.verticesNeedUpdate = true;
-	}
+	addLights() {
+		const geometry = new THREE.SphereGeometry( 2, 8, 8 );
+		const material = new THREE.MeshBasicMaterial( {color: 0xffffff} );
+		const sphere = new THREE.Mesh( geometry, material );
+
+    this.light1 = new THREE.PointLight(0xffffff);
+		this.light1.add(sphere);
+		this.light1.position.set(0, 1000, 1000);
+		this.scene.add(this.light1);
+
+		// this.light2 = new THREE.PointLight(0x00ff00);
+		// this.light2.add(sphere.clone());
+		// this.light2.position.set(0, 1000, 1000);
+		// this.scene.add(this.light2);
+  }
 
   rotateHTMLList() {
     const list = document.querySelectorAll('.rotate-list')
@@ -151,14 +130,16 @@ export default class App {
     if(this.controls) this.controls.update()
 
     // Update time
-    // this.material.uniforms.uTime.value = this.clock.getElapsedTime()
-		var timer = Date.now() * 0.00050;
-		this.light1.position.x = Math.cos(timer) * 250;
-		this.light1.position.z = Math.sin(timer) * 250;
-		this.light2.position.y = Math.cos(timer * 1.25) * 250;
-		this.light2.position.z = Math.sin(timer * 1.25) * 250;
-		this.cube.rotation.x += 0.005;
-		this.cube.rotation.y += 0.01;
+    this.material.uniforms.uTime.value = this.clock.getElapsedTime()
+
+		var timer = this.clock.getElapsedTime();
+		this.light1.position.x = Math.cos(timer) * 80;
+		this.light1.position.y = Math.cos(timer) * 150;
+		this.light1.position.z = Math.sin(timer) * 80;
+		// this.light2.position.y = Math.cos(timer * 1.25) * 250;
+		// this.light2.position.z = Math.sin(timer * 1.25) * 250;
+
+		this.cube.rotation.y += 0.04
     
 		this.renderer.render(this.scene, this.camera)
   }
@@ -166,22 +147,6 @@ export default class App {
   addListeners() {
     window.addEventListener('resize', this.resize.bind(this))
 		this.mouseMove()
-  }
-
-	addLights() {
-		const geometry = new THREE.SphereGeometry( 5, 32, 32 );
-		const material = new THREE.MeshBasicMaterial( {color: 0xffff00} );
-		const sphere = new THREE.Mesh( geometry, material );
-
-    this.light1 = new THREE.PointLight(0xff0000);
-		this.light1.add(sphere);
-		this.light1.position.set(250, 0, 100);
-		this.scene.add(this.light1);
-
-		this.light2 = new THREE.PointLight(0x00ff00);
-		// this.light2.addSphere();
-		this.light2.position.set(0, 1000, 1000);
-		this.scene.add(this.light2);
   }
 
 	mouseMove(){
@@ -219,5 +184,6 @@ export default class App {
 new App({
 	dom: document.getElementById('viz'),
 	fov: 70,
-	camZ: 400
+	camZ: 400,
+	bgColor: 0x000000
 });

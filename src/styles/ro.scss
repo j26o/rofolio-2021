@@ -152,12 +152,14 @@ header {
   -webkit-font-smoothing: subpixel-antialiased;
 
   li {
-    transform: rotateY(var(--rotY)) rotateZ(var(--rotZ));
+    transform: perspective(1500px) rotateY(0);
     transform-style: preserve-3d;
     transition: all 0.3s ease-in-out;
 
+    padding-left: 0.3rem;
+
     &:hover {
-      transform: perspective(3000px) rotateY(0);
+      transform: perspective(3000px) rotateY(var(--rotY)) rotateZ(var(--rotZ));
       color: white;
     }
   }

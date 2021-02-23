@@ -24,19 +24,19 @@ vec3 rotate(vec3 v, vec3 axis, float angle) {
 
 void main() {
 	float time = uTime * 0.2;
-	// vPos = (modelMatrix * vec4(position, 1.0 )).xyz;
-	vNormal = normalMatrix * normal;
+	vPos = (modelMatrix * vec4(position, 1.0 )).xyz;
+	vNormal = normalize(normalMatrix * normal);
+	// vNormal = (modelViewMatrix * vec4(normal, 0.0)).xyz;
 
 	vUv = uv;
-	vPos = position;
 
 	vec3 pos = position;
 
 	vec3 axis = vec3(0., 1., 0.);
 	float twist = 0.02 * sin(time);
-	float angle = pos.y * twist;
+	float angle = vPos.y * twist;
 
-	vec3 transformed = rotate(pos, axis, angle);
+	vec3 transformed = rotate(vPos, axis, angle);
 	
-	gl_Position = projectionMatrix * modelViewMatrix * vec4(pos,1.0);
+	gl_Position = projectionMatrix * modelViewMatrix * vec4(vPos,1.0);
 }

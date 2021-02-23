@@ -1,27 +1,3 @@
-// varying vec2 vUv;
-// varying vec3 vPosition;
-// varying vec4 vColor;
-
-// uniform sampler2D uTexture;
-// uniform float uTime;
-// uniform float hoverState;
-
-// void main() {
-//     float time = uTime * 0.3;
-//     vec2 repeat = vec2(2., 1.);
-//     vec2 uv = fract(vUv * repeat + vec2(time, 0.));
-//     // vec2 uv = fract(vUv * repeat);
-//     vec3 texture = texture2D(uTexture, uv).rgb;
-
-//     float fog = clamp(vPosition.z/5., 0., 1.);
-//     vec3 fragColor = mix(vec3(0.), texture, fog);
-    
-//     // vec3 fragColor = texture;
-
-//     gl_FragColor = vColor * vec4(fragColor, 1.);
-//     // gl_FragColor.rgb += 0.1*vec3(vNoise);
-// }
-
 uniform vec3 diffuse;
 uniform float uTime;
 uniform sampler2D uImage;
@@ -52,14 +28,19 @@ void main() {
     //     fragColor += clamp(dot(-lightDirection, vNormal), 0.0, 1.0) * pointLights[l].color;
     // }
 
+    float time = uTime * 0.6;
+    vec2 repeat = vec2(1., 3.);
+    vec2 uv = fract(vUv * repeat + vec2(0., time));
+
     vec4 addedLights = vec4(0.0, 0.0, 0.0, 1.0);
 		for(int l = 0; l < NUM_POINT_LIGHTS; l++) {
 			vec3 lightDirection = normalize(vPos - pointLights[l].position);
-			addedLights.rgb += clamp(dot(-lightDirection, vNormal), 0.0, 1.0)* pointLights[l].color * lightIntensity;
+			addedLights.rgb += clamp(dot(-lightDirection, vNormal), 0.0, 1.0) * pointLights[l].color * lightIntensity;
 		}
 
-		// gl_FragColor = texture2D(uImage, vUv) * addedLights;
+		// gl_FragColor = vec4(vUv, 1.);
+		gl_FragColor = texture2D(uImage, vUv) * addedLights;
 
-    gl_FragColor = texture2D(uImage, vUv);
+    // gl_FragColor = texture2D(uImage, uv);
     // gl_FragColor = vec4(fragColor, 1.);//mix(vec4(diffuse.x, diffuse.y, diffuse.z, 1.0), addedLights, addedLights);
 }

@@ -73,9 +73,10 @@ export default class App {
 		this.texture = new THREE.Texture(img);
 		this.texture.anisotropy = 32;
 		this.texture.needsUpdate = true;
+		this.texture.offset = new THREE.Vector2(-20, 0)
 
-		this.texture.wrapS = THREE.RepeatWrapping;
-    this.texture.wrapT = THREE.RepeatWrapping;
+		// this.texture.wrapS = THREE.RepeatWrapping;
+    // this.texture.wrapT = THREE.RepeatWrapping;
     
 		
 		this.material = new THREE.MeshStandardMaterial({
@@ -175,9 +176,14 @@ export default class App {
 
 		// console.log(this.material)
 
-		this.cube = new THREE.Mesh(geometry, this.material);
+		this.greet = new THREE.Mesh(geometry, this.material);
+		this.greet.position.z = -10
+    // this.greet.position.x = -25
+    this.greet.rotation.x = -0.2
+    this.greet.rotation.y = -0.6
+    this.greet.rotation.z = 0
 
-		this.scene.add(this.cube)
+		this.scene.add(this.greet)
 	}
 
 	addLights() {
@@ -187,12 +193,12 @@ export default class App {
 
     this.light1 = new THREE.PointLight(0xffffff);
 		this.light1.add(sphere);
-		this.light1.position.set(0, 90, 0);
+		this.light1.position.set(70, 90, 0);
 		this.scene.add(this.light1);
 
 		this.light2 = new THREE.PointLight(0xffffff);
 		this.light2.add(sphere.clone());
-		this.light2.position.set(30, -30, 90);
+		this.light2.position.set(60, -30, 90);
 		this.scene.add(this.light2);
   }
 
@@ -216,23 +222,22 @@ export default class App {
     // this.material.uniforms.uTime.value = this.clock.getElapsedTime()
 
 		let timer = this.clock.getElapsedTime();
-		let friction = Math.sin(timer * 2) * 3;
 		
 		// console.log(friction)
 		if (this.material.material) {
 			this.material.material.uniforms.uTime.value = timer
 		}
 
-		var lightIntensity = 0.75 + 0.1 * Math.cos(timer * Math.PI);
+		var lightIntensity = 0.75 + 0.2 * Math.cos(timer * Math.PI);
 
     // this.material.uniforms.lightIntensity.value = lightIntensity;
     // this.light1.color.setHSL(lightIntensity, 1.0, 0.5);
 		this.light1.intensity = lightIntensity
-		this.light2.intensity = lightIntensity * 0.5
+		this.light2.intensity = lightIntensity + 0.05
 
 		// this.cube.rotation.y += 0.04
-		this.cube.rotation.x = timer;
-		this.texture.offset = new THREE.Vector2(Math.sin(timer + Math.PI) * 0.08);
+		// this.greet.rotation.x = timer;
+		this.texture.offset = new THREE.Vector2(Math.cos(timer + Math.PI/2) * 0.08);
 		// this.texture.offset = new THREE.Vector2(timer * 0.08);
     
 		this.renderer.render(this.scene, this.camera)

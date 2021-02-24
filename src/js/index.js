@@ -71,9 +71,9 @@ export default class App {
 	addObjects() {
 		const img = document.getElementById('ro');
 		this.texture = new THREE.Texture(img);
-		this.texture.anisotropy = 32;
+		// this.texture.anisotropy = 32;
+		this.texture.offset = new THREE.Vector2(100, 0)
 		this.texture.needsUpdate = true;
-		this.texture.offset = new THREE.Vector2(-20, 0)
 
 		// this.texture.wrapS = THREE.RepeatWrapping;
     // this.texture.wrapT = THREE.RepeatWrapping;
@@ -81,9 +81,9 @@ export default class App {
 		
 		this.material = new THREE.MeshStandardMaterial({
 			map: this.texture,
-			// roughnessMap: texture,
-			metalness: 0.5,
-			roughness: 0.5,
+			// roughnessMap: this.texture,
+			metalness: 0.2,
+			roughness: 1,
 			side: THREE.DoubleSide
 		})
 
@@ -138,48 +138,17 @@ export default class App {
 			);
 
 			shader.fragmentShader = "uniform float uTime;\nvarying vec2 vNuv;\nuniform sampler2D uTexture;\n" + shader.fragmentShader;
-
-			// shader.fragmentShader.replace(
-			// 	`#include <tonemapping_fragment>`,
-			// 	`
-			// 	float time = uTime * 0.3;
-			// 	vec2 repeat = vec2(2., 1.);
-			// 	vec2 newUv = fract(vNuv * repeat + vec2(time, 0.));
-
-			// 	vec3 texture = texture2D(uTexture, newUv).rgb;
-			// 	vec3 fragColor = mix(vec3(0.), texture, outgoingLight);
-
-			// 	gl_FragColor = vec4( fragColor, diffuseColor.a );
-			// 	#include <tonemapping_fragment>
-			// 	`
-			// );
-		// 	shader.fragmentShader.replace(
-		// 		`#include <map_fragment>`,
-		// 		`
-		// 		#ifdef USE_MAP
-		// 		float time = uTime * 0.3;
-		// 		vec4 texelColor = texture2D( uTexture, vUv + vec2(time, 0.) );
-		// 		texelColor = mapTexelToLinear( texelColor );
-		// 		diffuseColor *= texelColor;
-				
-		// 		#endif
-		// `
-		// 	);
-		
 			this.material = shader;
 		};
 
 		this.material.needsUpdate = true;
 
 		const geometry = new THREE.BoxBufferGeometry(160, 20, 20, 64, 64, 64);
-		// const geometry = new THREE.BoxBufferGeometry(0.9, 0.3, 0.3, 100, 200, 100);
-
-		// console.log(this.material)
 
 		this.greet = new THREE.Mesh(geometry, this.material);
 		this.greet.position.z = -10
-    // this.greet.position.x = -25
-    this.greet.rotation.x = -0.2
+		// this.greet.position.x = -20
+    this.greet.rotation.x = 0
     this.greet.rotation.y = -0.6
     this.greet.rotation.z = 0
 
@@ -187,24 +156,26 @@ export default class App {
 	}
 
 	addLights() {
-		const geometry = new THREE.SphereGeometry( 1, 8, 8 );
+		const geometry = new THREE.SphereGeometry( 0.5, 8, 8 );
 		const material = new THREE.MeshBasicMaterial( {color: 0xffffff} );
 		const sphere = new THREE.Mesh( geometry, material );
 
     this.light1 = new THREE.PointLight(0xffffff);
 		this.light1.add(sphere);
-		this.light1.position.set(70, 90, 0);
+		this.light1.position.set(-88, 188, 88);
+		this.light1.intensity = 0.25
 		this.scene.add(this.light1);
 
-		this.light2 = new THREE.PointLight(0xffffff);
-		this.light2.add(sphere.clone());
-		this.light2.position.set(60, -30, 90);
-		this.scene.add(this.light2);
+		// this.light2 = new THREE.PointLight(0xffffff);
+		// this.light2.add(sphere.clone());
+		// this.light2.position.set(-60, -80, 90);
+		// this.scene.add(this.light2);
 
-		// this.follow = new THREE.PointLight(0xffffff);
+		this.follow = new THREE.PointLight(0xffffff);
 		// this.follow.add(sphere.clone());
-		// this.follow.position.set(60, -30, 90);
-		// this.follow.add(this.light2);
+		this.follow.position.set(0, 0, 60);
+		this.follow.intensity = 0.5;
+		this.scene.add(this.follow);
   }
 
   rotateHTMLList() {
@@ -224,25 +195,22 @@ export default class App {
     if(this.controls) this.controls.update()
 
     // Update time
-    // this.material.uniforms.uTime.value = this.clock.getElapsedTime()
-
-		let timer = this.clock.getElapsedTime();
+    let timer = this.clock.getElapsedTime();
 		
-		// console.log(friction)
 		if (this.material.material) {
 			this.material.material.uniforms.uTime.value = timer
 		}
 
-		var lightIntensity = 0.75 + 0.2 * Math.cos(timer * Math.PI);
+		var lightIntensity = 0.5 + 0.1 * Math.cos(timer * Math.PI);
 
     // this.material.uniforms.lightIntensity.value = lightIntensity;
-    // this.light1.color.setHSL(lightIntensity, 1.0, 0.5);
-		this.light1.intensity = lightIntensity
-		this.light2.intensity = lightIntensity + 0.05
+		// this.light1.intensity = lightIntensity
+		// this.light2.intensity = lightIntensity + 0.05
+		// this.follow.intensity = lightIntensity + 0.05
 
-		// this.cube.rotation.y += 0.04
-		// this.greet.rotation.x = timer;
-		this.texture.offset = new THREE.Vector2(Math.cos(timer + Math.PI/2) * 0.08);
+    // this.follow.color.setHSL(lightIntensity, 0.5, 0.5)
+
+		this.texture.offset = new THREE.Vector2(Math.sin(timer - Math.PI/2) * 0.08 + 0.1);
 		// this.texture.offset = new THREE.Vector2(timer * 0.08);
     
 		this.renderer.render(this.scene, this.camera)
@@ -264,12 +232,26 @@ export default class App {
 				// calculate objects intersecting the picking ray
 				const intersects = this.raycaster.intersectObjects( this.scene.children );
 
-				if(intersects.length>0){
+				if(intersects.length > 0){
 					// console.log(intersects[0]);
 					// let obj = intersects[0].object;
 					// obj.material.uniforms.hover.value = intersects[0].uv;
 					// obj.material.uniforms.hoverState.value = 1;
 				}
+
+				var vector = new THREE.Vector3(this.mouse.x, this.mouse.y, 180);
+				vector.unproject( this.	camera );
+				var dir = vector.sub( this.camera.position ).normalize();
+				var distance = - this.camera.position.z / dir.z;
+				var pos = this.camera.position.clone().add( dir.multiplyScalar( distance ) );
+				this.follow.position.copy(pos)
+
+				// gsap.to(this.follow.position, {
+				// 	duration: 1,
+				// 	x: pos.x,
+				// 	y: pos.y,
+				// 	ease: "elastic"
+				// })
 		}, false );
 	}
 
@@ -288,7 +270,7 @@ export default class App {
 new App({
 	dom: document.getElementById('viz'),
 	fov: 70,
-	camZ: 60,
+	camZ: 30,
 	bgColor: 0x000000,
 	friction: 0
 });

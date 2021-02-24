@@ -200,6 +200,11 @@ export default class App {
 		this.light2.add(sphere.clone());
 		this.light2.position.set(60, -30, 90);
 		this.scene.add(this.light2);
+
+		// this.follow = new THREE.PointLight(0xffffff);
+		// this.follow.add(sphere.clone());
+		// this.follow.position.set(60, -30, 90);
+		// this.follow.add(this.light2);
   }
 
   rotateHTMLList() {

@@ -38,7 +38,7 @@ header {
   z-index: 1;
 
   p {
-    font-size: 0.6rem;
+    font-size: 0.8rem;
 
     a {
       color: rgba(255,255,255,0.8);
@@ -78,7 +78,8 @@ header {
   z-index: 1;
   
   background-color: rgba(0,0,0,0.7);
-  background: radial-gradient(circle, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.45) 45%, rgba(0,0,0,0) 70%);
+  // background: radial-gradient(circle, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.45) 45%, rgba(0,0,0,0) 70%);
+  background: linear-gradient(0deg, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.6) 40%, rgba(0,0, 0,0) 100%);
 }
 
 .push {
@@ -128,19 +129,35 @@ header {
   }
 }
 
-.works {
+.patrons {
   &_list {
     li {
       display: block;
       margin-bottom: 0.3rem;
     }
   }
+}
 
-  &-prev {
-    width: 65%;
-    
+.works {
+  width: 65%;
+
+  &_list {
     li {
       display: inline-block;
+      margin-bottom: 0.3rem;
+
+      padding: 0.3rem;
+
+      a {
+        color: $foreground-color;
+        text-decoration: underline;
+        transition: all 0.3s ease-in-out;
+
+        &:hover {
+          color: white;
+          text-decoration: none;
+        }
+      }
     }
   }
 }

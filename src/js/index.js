@@ -44,7 +44,7 @@ export default class App {
     
 		this.container.appendChild( this.renderer.domElement );
 
-		this.controls = new OrbitControls( this.camera, this.renderer.domElement );
+		// this.controls = new OrbitControls( this.camera, this.renderer.domElement );
 
 		const fontPatuaOne = new Promise((resolve, reject) => {
 			new FontFaceObserver('Patua One').load().then(()=>{ resolve() })

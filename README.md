@@ -35,11 +35,12 @@ node dist/bundle.js
 ```
 dist - Directory for built and compressed files from the npm build script
 src - Directory for all dev files
-├── sass - Contains all SCSS files, that are compiled to `dist/css`
-├── js - All the Three.js app files, with `app.js` as entry point. Compiled to `dist/js` with parcel
-│   └── gl - Three.js components that get initialized in `app.js`
-└── fonts - where fonts are located
-└── img - all images and textures
+├── styles - Contains all SCSS files, that are compiled to `dist/css`
+└── assets - all assets like images, fonts, and shaders
+│   └── img - all images and textures
+│   └── fonts - where fonts are located
+│   └── shaders - vertex and fragment shaders used
+└── js - All the Three.js app files, with `index.js` as entry point. Compiled to `dist/js` with parcel
 ```
 
 ## Credits

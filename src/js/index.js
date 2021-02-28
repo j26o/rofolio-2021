@@ -1,6 +1,9 @@
 
 import * as THREE from 'three'
 import {OrbitControls} from 'three/examples/jsm/controls/OrbitControls.js'
+import { EffectComposer } from 'three/examples//jsm/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/examples//jsm/postprocessing/RenderPass.js';
+import { UnrealBloomPass } from 'three/examples//jsm/postprocessing/UnrealBloomPass.js';
 
 import FontFaceObserver from 'fontfaceobserver'
 import imagesLoaded from 'imagesloaded'
@@ -10,26 +13,26 @@ import gsap from 'gsap'
 
 // import nameFragment from '../assets/shaders/fragment_name.glsl'
 // import nameVertex from '../assets/shaders/vertex_name.glsl'
-const deg = g => (g * Math.PI) / 180;	
 export default class App {
 	constructor(opt) {
 		this.opt = opt
-		this.container = opt.dom;
-		this.width = this.container.offsetWidth;
-		this.height = this.container.offsetHeight;
+		this.width = opt.container.offsetWidth;
+		this.height = opt.container.offsetHeight;
 		
 		this.renderer = new THREE.WebGLRenderer({
-      alpha: true,
 			antialias: true
     });
 
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
     this.renderer.setSize(this.width, this.height);
     this.renderer.setClearColor(opt.bgColor, 1);
+		this.renderer.toneMapping = THREE.ReinhardToneMapping;
+		this.renderer.toneMappingExposure = Math.pow( 1, 4.0 );
 
-    this.camera = new THREE.PerspectiveCamera( opt.fov, this.width / this.height, 0.001, 1000 );
+		opt.container.appendChild( this.renderer.domElement );
 
-    this.camera.position.z = opt.camZ;
+    this.camera = new THREE.PerspectiveCamera( opt.fov, this.width / this.height, 0.1, 1000 );
+    this.camera.position.set(0,0,opt.camZ)
 		this.camera.fov = 2 * Math.atan((this.height/2 * this.camZ)) * (180/Math.PI);
 
     this.scene = new THREE.Scene();
@@ -37,12 +40,20 @@ export default class App {
     this.clock = new THREE.Clock();
 		this.raycaster = new THREE.Raycaster();
     this.mouse = new THREE.Vector2();
-		this.currentScroll = 0;
-    this.previousScroll = 0;    
 
-		const canvas = this.renderer.domElement;
-    
-		this.container.appendChild( this.renderer.domElement );
+		// this.currentScroll = 0;
+    // this.previousScroll = 0;
+
+		this.renderScene = new RenderPass( this.scene, this.camera );
+
+		this.bloomPass = new UnrealBloomPass( new THREE.Vector2( this.width, this.height ), 1.5, 0.4, 0.08 );
+		this.bloomPass.threshold = 0;
+		this.bloomPass.strength = 1.5;
+		this.bloomPass.radius = 0.08;
+
+		this.composer = new EffectComposer( this.renderer );
+		this.composer.addPass( this.renderScene );
+		this.composer.addPass( this.bloomPass );
 
 		// this.controls = new OrbitControls( this.camera, this.renderer.domElement );
 
@@ -74,6 +85,7 @@ export default class App {
 		// this.texture.anisotropy = 32;
 		this.texture.offset = new THREE.Vector2(100, 0)
 		this.texture.needsUpdate = true;
+		this.texture.setClearColor = 0x000000
 
 		// this.texture.wrapS = THREE.RepeatWrapping;
     // this.texture.wrapT = THREE.RepeatWrapping;
@@ -95,45 +107,20 @@ export default class App {
 			shader.vertexShader = "uniform float uTime;\nuniform float uPI;\nvarying vec2 vNuv;\n" + shader.vertexShader;
 
 			shader.vertexShader = shader.vertexShader.replace(
-				"#include <clipping_planes_pars_vertex>",
-				`#include <clipping_planes_pars_vertex>
-					mat4 rotation3d(vec3 axis, float angle) {
-						axis = normalize(axis);
-						float s = sin(angle);
-						float c = cos(angle);
-						float oc = 1.0 - c;
-
-						return mat4(
-							oc * axis.x * axis.x + c,           oc * axis.x * axis.y + axis.z * s,  oc * axis.z * axis.x + axis.y * s,  0.0,
-							oc * axis.x * axis.y + axis.z * s,  oc * axis.y * axis.y + c,           oc * axis.y * axis.z - axis.x * s,  0.0,
-							oc * axis.z * axis.x - axis.y * s,  oc * axis.y * axis.z + axis.x * s,  oc * axis.z * axis.z + c,           0.0,
-							0.0,                                0.0,                                0.0,                                1.0
-						);
-					}
-
-					vec3 rotate(vec3 v, vec3 axis, float angle) {
-						return (rotation3d(axis, angle) * vec4(v, 1.0)).xyz;
-					}
-
-				`
-			);
-
-			shader.vertexShader = shader.vertexShader.replace(
 				"#include <begin_vertex>",
 				`
+					// https://codesandbox.io/s/threejs-twist-8-w0kvb?file=/index.js
 					float time = uTime * 0.2;
-					vNuv = uv;
+					float friction = sin(time * 2.) * 0.045;
 
-					vec3 pos = position;
-
-					vec3 axis = vec3(1., 0., 0.);
-					float twist = 0.04 * sin(time * uPI);
-
-					
-					float angle = sin(pos.x * twist);
-					// float angle = pos.x * twist;
-
-					vec3 transformed = rotate(pos, axis, angle);
+					float theta = position.x * friction;
+					float c = cos( theta );
+					float s = sin( theta );
+					mat3 m = mat3( 1, 0, 0,
+						0, c, -s,
+						0, s, c );
+					vec3 transformed = vec3( position ) * m;
+					vNormal = vNormal * m;
 				`
 			);
 
@@ -147,7 +134,7 @@ export default class App {
 
 		this.greet = new THREE.Mesh(geometry, this.material);
 		this.greet.position.z = -10
-		// this.greet.position.x = -20
+		this.greet.position.x = -8
     this.greet.rotation.x = 0
     this.greet.rotation.y = -0.6
     this.greet.rotation.z = 0
@@ -156,14 +143,14 @@ export default class App {
 	}
 
 	addLights() {
-		const geometry = new THREE.SphereGeometry( 0.5, 8, 8 );
+		const geometry = new THREE.SphereGeometry( 0.1, 8, 8 );
 		const material = new THREE.MeshBasicMaterial( {color: 0xffffff} );
 		const sphere = new THREE.Mesh( geometry, material );
 
     this.light1 = new THREE.PointLight(0xffffff);
 		this.light1.add(sphere);
-		this.light1.position.set(-88, 188, 88);
-		this.light1.intensity = 0.25
+		this.light1.position.set(-88, 88, 88);
+		this.light1.intensity = 0.08
 		this.scene.add(this.light1);
 
 		// this.light2 = new THREE.PointLight(0xffffff);
@@ -171,9 +158,9 @@ export default class App {
 		// this.light2.position.set(-60, -80, 90);
 		// this.scene.add(this.light2);
 
-		this.follow = new THREE.PointLight(0xffffff);
-		// this.follow.add(sphere.clone());
-		this.follow.position.set(0, 0, 60);
+		this.follow = new THREE.PointLight(0xf1f1f1);
+		this.follow.add(sphere.clone());
+		this.follow.position.set(90, 88, 88);
 		this.follow.intensity = 0.5;
 		this.scene.add(this.follow);
   }
@@ -201,7 +188,7 @@ export default class App {
 			this.material.material.uniforms.uTime.value = timer
 		}
 
-		var lightIntensity = 0.5 + 0.1 * Math.cos(timer * Math.PI);
+		var lightIntensity = 0.08 + 0.3 * Math.sin(timer * Math.PI);
 
     // this.material.uniforms.lightIntensity.value = lightIntensity;
 		// this.light1.intensity = lightIntensity
@@ -210,10 +197,17 @@ export default class App {
 
     // this.follow.color.setHSL(lightIntensity, 0.5, 0.5)
 
-		this.texture.offset = new THREE.Vector2(Math.sin(timer - Math.PI/2) * 0.08 + 0.1);
+		this.texture.offset = new THREE.Vector2(Math.sin(timer - Math.PI*2) * 0.08 + 0.02);
 		// this.texture.offset = new THREE.Vector2(timer * 0.08);
+
+		// this.greet.rotation.z = timer
+    // this.greet.rotation.y = -0.6
+    // this.greet.rotation.z = 0
+		// this.greet.rotation.set()
+
     
-		this.renderer.render(this.scene, this.camera)
+		// this.renderer.render(this.scene, this.camera)
+		this.composer.render();
   }
 
   addListeners() {
@@ -242,33 +236,41 @@ export default class App {
 				var vector = new THREE.Vector3(this.mouse.x, this.mouse.y, 180);
 				vector.unproject( this.	camera );
 				var dir = vector.sub( this.camera.position ).normalize();
-				var distance = - this.camera.position.z / dir.z;
+				var distance = - this.camera.position.z+8 / dir.z;
 				var pos = this.camera.position.clone().add( dir.multiplyScalar( distance ) );
-				this.follow.position.copy(pos)
+				// this.follow.position.copy(pos)
 
-				// gsap.to(this.follow.position, {
-				// 	duration: 1,
-				// 	x: pos.x,
-				// 	y: pos.y,
-				// 	ease: "elastic"
-				// })
+				// console.log(pos)
+
+				gsap.killTweensOf(this.follow)
+
+				gsap.to(this.follow.position, {
+					duration: 1.8,
+					x: pos.x,
+					y: pos.y,
+					z: pos.z,
+					delay: 0.08,
+					ease: "elastic"
+				})
 		}, false );
 	}
 
 	resize() {
-    this.width = window.innerWidth;
-    this.height = window.innerHeight;
+    this.width = this.opt.container.offsetWidth;
+		this.height = this.opt.container.offsetHeight;
 
     this.camera.aspect = this.width / this.height;
     // this.camera.updateProjectionMatrix();
 
-		this.camera.fov = 2 * Math.atan((this.height/2 * this.camZ)) * (180/Math.PI);
 		this.renderer.setSize(this.width, this.height);
+		this.composer.setSize(this.width, this.height);
+
+		// this.camera.fov = 2 * Math.atan((this.height/2 * this.camZ)) * (180/Math.PI);
   }
 }
 
 new App({
-	dom: document.getElementById('viz'),
+	container: document.getElementById('viz'),
 	fov: 70,
 	camZ: 30,
 	bgColor: 0x000000,

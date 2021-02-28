@@ -44,6 +44,6 @@
     "fontfaceobserver": "^2.1.0",
     "gsap": "^3.6.0",
     "imagesloaded": "^4.1.4",
-    "three": "^0.125.2"
+    "three": "^0.126.0"
   }
 }

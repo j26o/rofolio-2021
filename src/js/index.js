@@ -171,7 +171,7 @@ export default class App {
       const el = [...val.getElementsByTagName('li')]
       
       el.forEach(li => {
-        li.setAttribute('style', `--rotY: ${ Math.floor(Math.random() * 37) + 8 }deg; --rotZ: ${ Math.floor(Math.random() * 8) - 4 }deg`)
+        li.setAttribute('style', `--rotY: ${Math.random() * 30 - 30 }deg; --rotZ: ${ Math.random() * 8 - 8 }deg`)
       })
     }) 
   }
@@ -276,3 +276,4 @@ new App({
 	bgColor: 0x000000,
 	friction: 0
 });
+

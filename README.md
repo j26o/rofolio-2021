@@ -46,3 +46,14 @@ src - Directory for all dev files
 ## Credits
 
 Made with [createapp.dev](https://createapp.dev/)
+
+## Firebase hosting
+```sh
+npm install -g firebase-tools
+
+firebase login
+
+firebase init
+
+firebase deploy
+```
